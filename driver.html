@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Dashboard</title>
+</head>
+<body>
+  <h1>Driver Dashboard</h1>
+  <form id="driverForm">
+    <label>Driver Name:</label>
+    <input type="text" id="driverName" required><br><br>
+    <label>Bus Number:</label>
+    <input type="text" id="busNo" required><br><br>
+    <button type="submit">Start Sharing Location</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    const backendUrl = "https://your-render-app.onrender.com"; // 🔴 Replace after deploying
+
+    document.getElementById("driverForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      const driverName = document.getElementById("driverName").value;
+      const busNo = document.getElementById("busNo").value;
+      const busId = busNo.replace(/\s+/g, '_');
+
+      if(navigator.geolocation){
+        setInterval(()=>{
+          navigator.geolocation.getCurrentPosition(pos=>{
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+
+            fetch(backendUrl + "/update_location", {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({ bus_id: busId, lat, lng, bus_no: busNo, driver_name: driverName })
+            });
+          });
+        }, 5000);
+        document.getElementById("status").innerText = "Sharing live location...";
+      } else {
+        alert("Geolocation not supported");
+      }
+    });
+  </script>
+</body>
+</html>
