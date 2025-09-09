@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -29,11 +29,11 @@ def get_buses():
 
 @app.route('/driver')
 def driver_page():
-    return send_from_directory('.', 'driver.html')
+    return render_template('driver.html')
 
 @app.route('/passenger')
 def passenger_page():
-    return send_from_directory('.', 'passenger.html')
+    return render_template('passenger.html')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
