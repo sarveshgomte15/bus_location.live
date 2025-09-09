@@ -1,39 +1,49 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
-CORS(app)
 
+# Store bus data in memory (dictionary keyed by bus_id)
 bus_data = {}
 
-@app.route('/update_location', methods=['POST'])
+
+@app.route("/")
+def home():
+    return "🚍 Bus Location Live Server is Running!"
+
+
+# ---------------- DRIVER APP ----------------
+@app.route("/driver")
+def driver():
+    return render_template("driver.html")
+
+
+@app.route("/update_location", methods=["POST"])
 def update_location():
-    data = request.json
-    bus_id = data.get("bus_id")
-    lat = data.get("lat")
-    lng = data.get("lng")
-    bus_no = data.get("bus_no")
-    driver_name = data.get("driver_name")
+    data = request.get_json()
+    bus_id = data.get("bus_id", "default_bus")
+    lat = data.get("latitude")
+    lon = data.get("longitude")
 
-    bus_data[bus_id] = {
-        "lat": lat,
-        "lng": lng,
-        "bus_no": bus_no,
-        "driver_name": driver_name
-    }
-    return jsonify({"status": "success", "message": "Location updated"})
+    if bus_id and lat and lon:
+        bus_data[bus_id] = {"latitude": lat, "longitude": lon}
+        return jsonify({"status": "success", "message": f"Bus {bus_id} updated."})
+    else:
+        return jsonify({"status": "error", "message": "Missing bus_id or coordinates"}), 400
 
-@app.route('/get_buses', methods=['GET'])
-def get_buses():
-    return jsonify(bus_data)
 
-@app.route('/driver')
-def driver_page():
-    return render_template('driver.html')
+# ---------------- PASSENGER APP ----------------
+@app.route("/passenger")
+def passenger():
+    return render_template("passenger.html")
 
-@app.route('/passenger')
-def passenger_page():
-    return render_template('passenger.html')
+
+@app.route("/get_location/<bus_id>", methods=["GET"])
+def get_location(bus_id):
+    if bus_id in bus_data:
+        return jsonify({"bus_id": bus_id, "location": bus_data[bus_id]})
+    else:
+        return jsonify({"status": "error", "message": "Bus not found"}), 404
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
