@@ -1,1 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Driver - Bus Location</title>
+  <script>
+    function sendLocation(position) {
+      fetch("/update_location", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        })
+      })
+      .then(response => response.json())
+      .then(data => console.log("Location sent:", data))
+      .catch(error => console.error("Error:", error));
+    }
+
+    function errorHandler(err) {
+      console.error("Error getting location:", err);
+    }
+
+    function startSharing() {
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(sendLocation, errorHandler, {
+          enableHighAccuracy: true,
+          maximumAge: 0
+        });
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    }
+  </script>
+</head>
+<body onload="startSharing()">
+  <h2>Driver Location Sharing</h2>
+  <p>Your location is being shared with passengers...</p>
+</body>
+</html>
 
