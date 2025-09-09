@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Driver Dashboard (Simulation)</title>
+  <title>Driver Dashboard (GPS)</title>
 </head>
 <body>
-  <h1>Driver Dashboard (Simulation Mode)</h1>
+  <h1>Driver Dashboard (GPS Mode)</h1>
   <form id="driverForm">
     <label>Driver Name:</label>
     <input type="text" id="driverName" required><br><br>
     <label>Bus Number:</label>
     <input type="text" id="busNo" required><br><br>
-    <button type="submit">Start Bus Simulation</button>
+    <button type="submit">Start Sharing Location</button>
   </form>
 
   <p id="status"></p>
 
   <script>
-    const backendUrl = "https://your-app.onrender.com"; // 🔴 Replace with your Render URL
+    const backendUrl = "https://your-app.onrender.com"; // 🔴 replace with your Render URL
 
     document.getElementById("driverForm").addEventListener("submit", function(e){
       e.preventDefault();
@@ -26,25 +26,27 @@
       const busNo = document.getElementById("busNo").value;
       const busId = busNo.replace(/\s+/g, '_');
 
-      let lat = 19.8762; // Aurangabad latitude
-      let lng = 75.3433; // Aurangabad longitude
+      document.getElementById("status").innerText = "Requesting GPS access...";
 
-      document.getElementById("status").innerText = "Simulating bus movement...";
+      if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
 
-      setInterval(()=>{
-        // simulate movement step by step (towards Pune)
-        lat += 0.01; 
-        lng += 0.01; 
+          fetch(backendUrl + "/update_location", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ bus_id: busId, lat, lng, bus_no: busNo, driver_name: driverName })
+          });
 
-        fetch(backendUrl + "/update_location", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({ bus_id: busId, lat, lng, bus_no: busNo, driver_name: driverName })
-        });
-
-        document.getElementById("status").innerText =
-          `Bus moving: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-      }, 5000);
+          document.getElementById("status").innerText =
+            `Sharing location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }, function(error){
+          document.getElementById("status").innerText = "Error: " + error.message;
+        }, { enableHighAccuracy: true });
+      } else {
+        document.getElementById("status").innerText = "GPS not supported on this device.";
+      }
     });
   </script>
 </body>
