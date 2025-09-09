@@ -1,1 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Passenger - Bus Location</title>
+  <style>
+    #map {
+      height: 90vh;
+      width: 100%;
+    }
+  </style>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+  <script>
+    let map, marker;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 15,
+        center: { lat: 0, lng: 0 }
+      });
+      marker = new google.maps.Marker({
+        map: map,
+        position: { lat: 0, lng: 0 },
+        title: "Bus Location"
+      });
+      fetchLocation();
+      setInterval(fetchLocation, 5000); // refresh every 5 sec
+    }
+
+    function fetchLocation() {
+      fetch("/get_location")
+        .then(response => response.json())
+        .then(data => {
+          let newPos = { lat: data.latitude, lng: data.longitude };
+          marker.setPosition(newPos);
+          map.setCenter(newPos);
+        })
+        .catch(error => console.error("Error:", error));
+    }
+  </script>
+</head>
+<body onload="initMap()">
+  <h2>Passenger View - Live Bus Location</h2>
+  <div id="map"></div>
+</body>
+</html>
 
