@@ -1,46 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Passenger - Bus Location</title>
+  <meta charset="UTF-8">
+  <title>Passenger App</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
-    #map {
-      height: 90vh;
-      width: 100%;
-    }
+    #map { height: 90vh; width: 100%; }
   </style>
-  <script src="https://maps.googleapis.com/maps/api/js?key=13.228.225.19"></script>
+</head>
+<body>
+  <h2>Passenger App</h2>
+  <p>Bus ID: <input type="text" id="busId" value="bus_1">
+     <button onclick="trackBus()">Track</button></p>
+  <div id="map"></div>
+
   <script>
     let map, marker;
 
     function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 15,
-        center: { lat: 0, lng: 0 }
-      });
-      marker = new google.maps.Marker({
-        map: map,
-        position: { lat: 0, lng: 0 },
-        title: "Bus Location"
-      });
-      fetchLocation();
-      setInterval(fetchLocation, 5000); // refresh every 5 sec
+      map = L.map('map').setView([18.5204, 73.8567], 14); // Default Pune coords
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      marker = L.marker([18.5204, 73.8567]).addTo(map);
     }
 
-    function fetchLocation() {
-      fetch("/get_location")
-        .then(response => response.json())
-        .then(data => {
-          let newPos = { lat: data.latitude, lng: data.longitude };
-          marker.setPosition(newPos);
-          map.setCenter(newPos);
-        })
-        .catch(error => console.error("Error:", error));
+    function trackBus() {
+      const busId = document.getElementById("busId").value;
+
+      setInterval(() => {
+        fetch(`/get_location/${busId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.location) {
+              const { latitude, longitude } = data.location;
+              const newPos = [latitude, longitude];
+              marker.setLatLng(newPos);
+              map.setView(newPos, 14);
+            }
+          })
+          .catch(err => console.error(err));
+      }, 5000);
     }
+
+    window.onload = initMap;
   </script>
-</head>
-<body onload="initMap()">
-  <h2>Passenger View - Live Bus Location</h2>
-  <div id="map"></div>
 </body>
 </html>
-
